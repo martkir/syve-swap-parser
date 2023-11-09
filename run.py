@@ -111,8 +111,6 @@ class SwapDataParser(object):
         formatted_log = self.get_formatted_log(raw_log)
         if formatted_log is None:
             return
-        if formatted_log["removed"] is True:
-            return
         if formatted_log["topic_0"] not in {
             UNISWAP_V2_SWAP_SIGNATURE,
             UNISWAP_V3_SWAP_SIGNATURE,
@@ -125,7 +123,6 @@ class SwapDataParser(object):
             return
 
         tx_hash = formatted_log["transaction_hash"]
-        block_hash = formatted_log["block_hash"]
         log_index = formatted_log["log_index"]
         block_number = formatted_log["block_number"]
 
@@ -165,7 +162,6 @@ class SwapDataParser(object):
 
         record = {
             "block_number": block_number,
-            "block_hash": block_hash,
             "transaction_hash": tx_hash,
             "log_index": log_index,
             "pool_address": pool_address,
@@ -210,13 +206,15 @@ if __name__ == "__main__":
     }
     res = requests.get(url, params=params)
     raw_logs = res.json()
+    print(json.dumps(raw_logs[:3], indent=2))
 
     token_metadata_map = load_token_metadata(token_metadata_path="data/token_metadata.tsv")
-    # pool_metadata_map = load_pool_metadata_map(pool_metadata_path="data/pool_metadata.tsv")
+    pool_metadata_map = load_pool_metadata_map(pool_metadata_path="data/pool_metadata.tsv")
 
     parser = SwapDataParser()
-    parser.parse(
+    swaps = parser.parse(
         raw_logs=raw_logs,
         token_metadata_map=token_metadata_map,
-        pool_metadata_map={},
+        pool_metadata_map=pool_metadata_map,
     )
+    print(json.dumps(swaps[:3], indent=2))
